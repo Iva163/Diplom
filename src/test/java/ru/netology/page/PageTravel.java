@@ -19,7 +19,6 @@ public class PageTravel {
     private SelenideElement buyInCredit = $$("h3").findBy(Condition.text("Кредит по данным карты"));
     private ElementsCollection formFields = $$(".input_has-label");
     private SelenideElement numberCard = $("input[placeholder=\"0000 0000 0000 0000\"]");
-    private SelenideElement numberCardForm = formFields.findBy(Condition.text("Оплата по карте"));
     private SelenideElement month = $("input[placeholder=\"08\"]");
     private SelenideElement year = $("input[placeholder=\"22\"]");
     private SelenideElement cardOwner = formFields.findBy(Condition.text("Владелец")).$(".input__control");
@@ -27,6 +26,13 @@ public class PageTravel {
     private SelenideElement continueButton = $$("button").findBy(Condition.text("Продолжить"));
     private SelenideElement notificationOk = $(".notification_status_ok");
     private SelenideElement notificationError = $(".notification_status_error");
+
+    private SelenideElement ownerField = formFields.findBy(Condition.text("Владелец"));
+    private SelenideElement numberField = formFields.findBy(Condition.text("Номер карты"));
+    private SelenideElement monthField = formFields.findBy(Condition.text("Месяц"));
+    private SelenideElement yearField = formFields.findBy(Condition.text("Год"));
+    private SelenideElement cvcField = formFields.findBy(Condition.text("CVC/CVV"));
+
 
     public PageTravel() {
         heading.shouldBe(visible);
@@ -46,7 +52,7 @@ public class PageTravel {
     }
 
     public int getPriceInKops() {
-        var str = $$("li").findBy(Condition.text("руб")).getText().split(" ");
+        String[] str = $$("li").findBy(Condition.text("руб")).getText().split(" ");
         return Integer.valueOf(str[1] + str[2]) * 100;
 
     }
@@ -80,29 +86,27 @@ public class PageTravel {
     }
 
     public void notificationError() {
-        notificationError.shouldBe(visible, Duration.ofSeconds(15));
+        notificationError.shouldBe(visible, Duration.ofSeconds(18));
     }
 
-    public void notificationMessageFieldInFill(int index) {
-        formFields.get(index - 1).shouldBe(Condition.text("Поле обязательно для заполнения"));
+    public void notificationMessageOwner(String message) {
+        ownerField.shouldBe(Condition.text(message));
     }
 
-    public void notificationMessageWrongFormat(int index) {
-        formFields.get(index - 1).shouldBe(Condition.text("Неверный формат"));
+    public void notificationMessageNumber(String message) {
+        numberField.shouldBe(Condition.text(message));
     }
 
-    public void notificationMessageErrorCartDate(int index) {
-        formFields.get(index - 1).shouldBe(Condition.text("Неверно указан срок действия карты"));
+    public void notificationMessageMonth(String message) {
+        monthField.shouldBe(Condition.text(message));
     }
 
-    public void notificationMessageErrorCardDateExpired(int index) {
-        formFields.get(index - 1).shouldBe(Condition.text("Истёк срок действия карты"));
+    public void notificationMessageYear(String message) {
+        yearField.shouldBe(Condition.text(message));
     }
 
-
-
-
-
-
+    public void notificationMessageCVC(String message) {
+        cvcField.shouldBe(Condition.text(message));
+    }
 
 }

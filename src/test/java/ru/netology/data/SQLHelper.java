@@ -2,11 +2,12 @@ package ru.netology.data;
 
 import lombok.SneakyThrows;
 import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.ScalarHandler;
+import org.apache.commons.dbutils.handlers.BeanHandler;
+
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
+
 
 public class SQLHelper {
     private static QueryRunner runner = new QueryRunner();
@@ -14,84 +15,45 @@ public class SQLHelper {
     public SQLHelper() {
     }
 
-    private static Connection getConn() throws SQLException {
-        return DriverManager.getConnection(System.getProperty("db.url"), "app", "pass");
+    private static String url = System.getProperty("db.url");
+    private static String user = System.getProperty("db.user");
+    private static String password = System.getProperty("db.password");
+
+
+    @SneakyThrows
+    private static Connection getConn() {
+        return DriverManager.getConnection(url, user, password);
 
     }
 
     @SneakyThrows
     public static void cleanDatabase() {
-        var connection = getConn();
-        runner.execute(connection, "DELETE FROM payment_entity");
-        runner.execute(connection, "DELETE FROM credit_request_entity");
-        runner.execute(connection, "DELETE FROM order_entity");
-
+        Connection conn = getConn();
+        runner.execute(conn, "DELETE FROM payment_entity");
+        runner.execute(conn, "DELETE FROM credit_request_entity");
+        runner.execute(conn, "DELETE FROM order_entity");
     }
 
-    public static String getPaymentCardStatus() {
-        var codeSQL = "SELECT status FROM payment_entity ORDER BY created DESC LIMIT 1";
-        try (var conn = getConn()) {
-            return runner.query(conn, codeSQL, new ScalarHandler<>());
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
-        return null;
+    @SneakyThrows
+    public static DataHelper.PaymentEntity getPaymentEntity() {
+        String codeSQL = "SELECT * FROM payment_entity ORDER BY created DESC LIMIT 1";
+        Connection conn = getConn();
+        return runner.query(conn, codeSQL, new BeanHandler<>(DataHelper.PaymentEntity.class));
     }
 
-    public static String getCreditCardStatus() {
-        var codeSQL = "SELECT status FROM credit_request_entity ORDER BY created DESC LIMIT 1";
-        try (var conn = getConn()) {
-            return runner.query(conn, codeSQL, new ScalarHandler<String>());
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
-        return null;
+    @SneakyThrows
+    public static DataHelper.CreditRequestEntity getCreditRequestEntity() {
+        String codeSQL = "SELECT * FROM credit_request_entity ORDER BY created DESC LIMIT 1";
+        Connection conn = getConn();
+        return runner.query(conn, codeSQL, new BeanHandler<>(DataHelper.CreditRequestEntity.class));
     }
 
-    public static long getOrderCount() {
-        var codeSQL = "SELECT COUNT(*) FROM order_entity";
-        try (var conn = getConn()) {
-            return runner.query(conn, codeSQL, new ScalarHandler<Long>());
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
-        return 0;
+    @SneakyThrows
+    public static DataHelper.OrderEntity getOrderEntity() {
+        String codeSQL = "SELECT * FROM order_entity ORDER BY created DESC LIMIT 1";
+        Connection conn = getConn();
+        return runner.query(conn, codeSQL, new BeanHandler<>(DataHelper.OrderEntity.class));
     }
 
-    public static String getCreditIdFromOrder() {
-        var codeSQL = "Select credit_id from order_entity";
-        try (var conn = getConn()) {
-            return runner.query(conn, codeSQL, new ScalarHandler<String>());
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
-        return null;
-    }
-
-    public static String getPaymentIdFromOrder() {
-        var codeSQL = "Select payment_id from order_entity";
-        try (var conn = getConn()) {
-            return runner.query(conn, codeSQL, new ScalarHandler<String>());
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
-        return null;
-    }
-
-    public static int checkIdOrder(String id) {
-        if (id == null){
-            return 0;
-        } else {return 1;}
-    }
-
-    public static int getAmount() {
-        var codeSQL = "Select amount from payment_entity";
-        try (var conn = getConn()) {
-            return runner.query(conn, codeSQL, new ScalarHandler<Integer>());
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
-        return 0;
-    }
 
 }

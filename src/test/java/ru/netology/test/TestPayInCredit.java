@@ -1,20 +1,19 @@
 package ru.netology.test;
 
-import org.junit.jupiter.api.*;
 import com.codeborne.selenide.logevents.SelenideLogger;
 import io.qameta.allure.selenide.AllureSelenide;
+import org.junit.jupiter.api.*;
 import ru.netology.data.DataHelper;
 import ru.netology.data.SQLHelper;
 import ru.netology.page.PageTravel;
 
-
 import static com.codeborne.selenide.Selenide.open;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static ru.netology.data.SQLHelper.*;
+import static ru.netology.data.SQLHelper.cleanDatabase;
 
-public class TestPay {
+public class TestPayInCredit {
 
-    private static DataHelper.PaymentEntity payment;
+    private static DataHelper.CreditRequestEntity credit;
     private static DataHelper.OrderEntity order;
 
     @BeforeAll
@@ -38,13 +37,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Card number with status APPROVED for payment")
-    void shouldSuccessfulPayWithAPPROVEDCard() {
+    @DisplayName("Card number with status APPROVED for credit")
+    void shouldSuccessfulBuyInCreditWithAPPROVEDCard() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        int price = page.getPriceInKops();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -53,20 +51,21 @@ public class TestPay {
         page.clickContinue();
         page.notificationOk();
 
-        payment = SQLHelper.getPaymentEntity();
+        credit = SQLHelper.getCreditRequestEntity();
         order = SQLHelper.getOrderEntity();
-        assertEquals(status, payment.getStatus());
-        assertEquals(price, payment.getAmount());
-        assertEquals(payment.getTransaction_id(), order.getPayment_id());
+        assertEquals(status, credit.getStatus());
+        assertEquals(credit.getBank_id(), order.getPayment_id());
+        assertEquals(credit.getId(), order.getCredit_id());
+
     }
 
     @Test
-    @DisplayName("Card number with status DECLINED for payment")
-    void shouldErrorPayWithDECLINEDCard() {
+    @DisplayName("Card number with status DECLINED for credit")
+    void shouldErrorBuyInCreditWithDECLINEDCard() {
 
         String status = "DECLINED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -75,15 +74,16 @@ public class TestPay {
         page.clickContinue();
         page.notificationError();
 
-        assertEquals(status, SQLHelper.getPaymentEntity().getStatus());
+        assertEquals(status, SQLHelper.getCreditRequestEntity().getStatus());
+
     }
 
     @Test
-    @DisplayName("Empty form for payment")
-    void shouldMessageFilInFieldInPay() {
+    @DisplayName("Empty form for credit")
+    void shouldMessageFilInFieldInCredit() {
 
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.clickContinue();
         page.notificationMessageNumber("Поле обязательно для заполнения");
         page.notificationMessageMonth("Поле обязательно для заполнения");
@@ -93,12 +93,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Card number with status INVALID for payment")
-    void shouldErrorPayWithINVALIDCard() {
+    @DisplayName("Card number with status INVALID for credit")
+    void shouldErrorCreditWithINVALIDCard() {
 
         String status = "INVALID";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -107,17 +107,17 @@ public class TestPay {
         page.clickContinue();
         page.notificationError();
         assertEquals(null, SQLHelper.getOrderEntity());
-        assertEquals(null, SQLHelper.getPaymentEntity());
+        assertEquals(null, SQLHelper.getCreditRequestEntity());
 
     }
 
     @Test
-    @DisplayName("Card number with status ZERO for payment")
-    void shouldErrorPayWithZEROCard() {
+    @DisplayName("Card number with status ZERO for credit")
+    void shouldErrorCreditWithZEROCard() {
 
         String status = "ZERO";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -126,16 +126,17 @@ public class TestPay {
         page.clickContinue();
         page.notificationError();
         assertEquals(null, SQLHelper.getOrderEntity());
-        assertEquals(null, SQLHelper.getPaymentEntity());
+        assertEquals(null, SQLHelper.getCreditRequestEntity());
+
     }
 
     @Test
-    @DisplayName("Card number with status FIFTEEN for payment")
-    void shouldErrorPayWithFIFTEENCard() {
+    @DisplayName("Card number with status FIFTEEN for credit")
+    void shouldErrorCreditWithFIFTEENCard() {
 
         String status = "FIFTEEN";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -147,12 +148,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Month ZERO for payment")
-    void shouldErrorZeroMonthForPay() {
+    @DisplayName("Month ZERO for credit")
+    void shouldErrorZeroMonthForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.getZero());
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -164,12 +165,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Month Over for payment")
-    void shouldErrorOverMonthForPay() {
+    @DisplayName("Month Over for credit")
+    void shouldErrorOverMonthForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.getMonthOver());
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -181,12 +182,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Month One Digit for payment")
-    void shouldErrorOneDigitMonthForPay() {
+    @DisplayName("Month One Digit for credit")
+    void shouldErrorOneDigitMonthForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.getMonthOneDig());
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -198,12 +199,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Year ZERO for payment")
-    void shouldErrorZeroYearForPay() {
+    @DisplayName("Year ZERO for credit")
+    void shouldErrorZeroYearForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.getZero());
@@ -215,12 +216,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Year More for payment")
-    void shouldErrorMoreYearForPay() {
+    @DisplayName("Year More for credit")
+    void shouldErrorMoreYearForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(10));
@@ -232,12 +233,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Year Less for payment")
-    void shouldErrorLessYearForPay() {
+    @DisplayName("Year Less for credit")
+    void shouldErrorLessYearForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearMinus(1));
@@ -249,12 +250,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Cyrillic Name  for payment")
-    void shouldErrorCyrillicNameForPayment() {
+    @DisplayName("Cyrillic Name for credit")
+    void shouldErrorCyrillicNameForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -266,12 +267,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Number Name for payment")
-    void shouldErrorNumberNameForPayment() {
+    @DisplayName("Number Name for credit")
+    void shouldErrorNumberNameForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -283,12 +284,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("One letter Name for payment")
-    void shouldErrorOneLetterNameForPayment() {
+    @DisplayName("One letter Name for credit")
+    void shouldErrorOneLetterNameForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -300,12 +301,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Special characters Name for payment")
-    void shouldErrorSpecCharNameForPayment() {
+    @DisplayName("Special characters Name for credit")
+    void shouldErrorSpecCharNameForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -317,12 +318,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("Two digits CVC for payment")
-    void shouldErrorTwoDigCVCForPayment() {
+    @DisplayName("Two digits CVC for credit")
+    void shouldErrorTwoDigCVCForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -334,12 +335,12 @@ public class TestPay {
     }
 
     @Test
-    @DisplayName("One digits CVC for payment")
-    void shouldErrorOneDigCVCForPayment() {
+    @DisplayName("One digits CVC for credit")
+    void shouldErrorOneDigCVCForCredit() {
 
         String status = "APPROVED";
         PageTravel page = new PageTravel();
-        page.buy();
+        page.buyInCredit();
         page.inputNumberCard(status);
         page.inputMonth(DataHelper.generateMonthPlus(0));
         page.inputYear(DataHelper.generateYearPlus(1));
@@ -349,5 +350,4 @@ public class TestPay {
         page.notificationMessageCVC("Неверный формат");
 
     }
-
 }
